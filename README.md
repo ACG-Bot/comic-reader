@@ -1,4 +1,4 @@
-
+```markdown
 ---
 
 # Comic Reader 懒人包 - 小白也能轻松上手的漫画阅读器
@@ -62,11 +62,6 @@ termux-setup-storage
 - **unzip**：用于测试 zip 文件。
   - Ubuntu/Debian：`sudo apt install unzip`
   - macOS：通常已预装
-
-### 2. 下载懒人包
-
-- 下载 `comic-reader-lazy.zip` 文件（由提供者分享）。
-- 如果你没有下载链接，可以联系提供者获取。
 
 ---
 
@@ -286,11 +281,11 @@ termux-setup-storage
 #### 4. 访问服务
 
 1. 打开浏览器（推荐 Chrome 或 Firefox）。
-2. In the address bar, enter:
+2. 在地址栏输入：
    ```
    http://localhost:3000
    ```
-   Press Enter to access the comic reader page.
+   按回车，进入漫画阅读器页面。
 
 ---
 
@@ -332,6 +327,9 @@ termux-setup-storage
 ### 2. 阅读漫画
 
 - 加载完成后，页面会显示漫画图片。
+- **图片排序**：图片按文件名中的数字序号从大到小排列（降序）。例如：
+  - `99.jpg`, `66.jpg`, `3.jpg`, `2.jpg`, `1.jpg`
+  - `chapter2_002.jpg`, `chapter2_001.jpg`, `chapter1_002.jpg`, `chapter1_001.jpg`
 - 滑动页面即可翻页。
 - 左下角会显示当前页码（例如“第 1/62 页”），随着滑动实时更新。
 
@@ -366,7 +364,7 @@ termux-setup-storage
      Comic reader running at http://localhost:3000
      ```
      如果没有，重新运行 `npm start` 或 `./deploy.sh`。
-  2. 如果端口被占用，修改 `server.js` 中的端口号（将 `const port = 3000` 改为其他值，例如 `3001`），然后重新启动服务.
+  2. 如果端口被占用，修改 `server.js` 中的端口号（将 `const PORT = process.env.PORT || 3000` 改为其他值，例如 `3001`），或者设置环境变量 `PORT`（例如 `PORT=3001 ./deploy.sh`），然后重新启动服务.
 
 ### 2. 上传文件后显示“加载漫画失败”
 
@@ -423,6 +421,17 @@ termux-setup-storage
   2. 按照提示允许权限。
   3. 重新运行解压和部署命令。
 
+### 6. 图片排序不符合预期
+
+- **可能原因**：
+  - 文件名格式不规范（例如 `imageA.jpg` 不含数字）。
+  - zip 文件包含子目录。
+- **解决方法**：
+  1. 确保文件名包含数字（例如 `001.jpg`, `chapter1_001.jpg`）。
+  2. 如果文件名不含数字，图片将按字典序降序排列。
+  3. 如果 zip 文件包含子目录，程序会自动处理（支持多层目录）。
+  4. 如果排序仍然有问题，提供文件名列表（运行 `unzip -l 你的文件.zip`），以便进一步调试。
+
 ---
 
 ## 进阶操作
@@ -431,20 +440,25 @@ termux-setup-storage
 
 如果 `3000` 端口被占用：
 
-1. 打开 `server.js` 文件。
-2. 找到以下行：
-   ```javascript
-   const port = 3000;
+1. 设置环境变量 `PORT`：
+   ```bash
+   PORT=3001 ./deploy.sh
    ```
-   修改为其他端口，例如：
-   ```javascript
-   const port = 3001;
-   ```
-3. 保存文件，重新启动服务：
+   或者手动修改 `server.js`：
+   - 打开 `server.js` 文件。
+   - 找到以下行：
+     ```javascript
+     const PORT = process.env.PORT || 3000;
+     ```
+     修改默认端口，例如：
+     ```javascript
+     const PORT = process.env.PORT || 3001;
+     ```
+2. 保存文件，重新启动服务：
    ```bash
    npm start
    ```
-4. 访问新的地址，例如 `http://localhost:3001`.
+3. 访问新的地址，例如 `http://localhost:3001`.
 
 ### 2. 在局域网内访问
 
@@ -507,4 +521,3 @@ termux-setup-storage
 本项目使用 **MIT 许可证**，详见 [LICENSE](LICENSE) 文件。
 
 ---
-

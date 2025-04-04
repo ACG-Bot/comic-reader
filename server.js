@@ -5,7 +5,6 @@ const multer = require('multer');
 const AdmZip = require('adm-zip');
 
 const app = express();
-const port = 3000;
 
 // 设置临时目录
 const tempDir = path.join(__dirname, 'temp');
@@ -77,6 +76,25 @@ app.post('/upload', upload.single('comic'), (req, res) => {
     console.log('POST /upload: Response sent (200), time taken:', `${Date.now() - startTime}ms`);
 });
 
+// 强大的自然排序函数（降序）
+function naturalSort(a, b) {
+    // 提取文件名中的所有数字部分
+    const numA = a.match(/\d+/g)?.map(num => parseInt(num, 10)) || [0];
+    const numB = b.match(/\d+/g)?.map(num => parseInt(num, 10)) || [0];
+
+    // 按数字逐部分比较
+    for (let i = 0; i < Math.max(numA.length, numB.length); i++) {
+        const partA = numA[i] || 0;
+        const partB = numB[i] || 0;
+        if (partA !== partB) {
+            return partB - partA; // 降序：大的在前
+        }
+    }
+
+    // 如果数字部分相同，按字典序排序（降序）
+    return b.localeCompare(a);
+}
+
 // 获取漫画内容
 app.get('/comic/:filename', async (req, res) => {
     const startTime = Date.now();
@@ -112,9 +130,10 @@ app.get('/comic/:filename', async (req, res) => {
         }
 
         console.log('GET /comic/:filename: Total images found:', images.length);
-        console.log('GET /comic/:filename: Images list:', images);
-        console.log('GET /comic/:filename: Sorting images...');
-        images.sort();
+        console.log('GET /comic/:filename: Images list (before sorting):', images);
+        console.log('GET /comic/:filename: Sorting images (descending)...');
+        images.sort(naturalSort); // 使用自然排序（降序）
+        console.log('GET /comic/:filename: Images list (after sorting):', images);
         console.log('GET /comic/:filename: Sending response with images...');
         res.json(images);
         console.log('GET /comic/:filename: Response sent (200), time taken:', `${Date.now() - startTime}ms`);
@@ -231,7 +250,8 @@ app._router.stack.forEach((r, i) => {
     }
 });
 
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Comic reader running at http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Comic reader running at http://localhost:${PORT}`);
     console.log('Server started successfully');
 });
