@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漫画阅读器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+        }
+        #comic-upload {
+            padding: 20px;
+            text-align: center;
+        }
+        #comic-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .comic-image {
+            width: 100%;
+            display: block;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+        }
+        #page-counter {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none; /* 初始隐藏 */
+        }
+    </style>
+</head>
+<body>
+    <div id="comic-upload">
+        <input type="file" id="comic-file" accept=".zip" />
+        <button onclick="uploadComic()">上传漫画</button>
+    </div>
+    <div id="loading" style="display: none;">加载中...</div>
+    <div id="page-counter"></div>
+    <div id="comic-container"></div>
+
+    <script>
+        let currentImages = [];
+        let currentFilename = '';
+
+        function uploadComic() {
+            const fileInput = document.getElementById('comic-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('请选择一个 zip 文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('comic', file);
+
+            document.getElementById('loading').style.display = 'block';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                loadComic(data.filename);
+            })
+            .catch(err => {
+                console.error('Upload error:', err);
+                alert('上传失败: ' + err.message);
+            })
+            .finally(() => {
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        function loadComic(filename) {
+            currentFilename = filename;
+            console.log('Fetching comic:', filename);
+            fetch(`/comic/${filename}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(images => {
+                    console.log('Received images:', images);
+                    currentImages = images;
+                    const container = document.getElementById('comic-container');
+                    container.innerHTML = '';
+
+                    if (images.length === 0) {
+                        container.innerHTML = '<p>未找到图片</p>';
+                        return;
+                    }
+
+                    images.forEach((image, index) => {
+                        const img = document.createElement('img');
+                        const encodedPath = encodeURIComponent(image);
+                        img.src = `/image/${filename}/${encodedPath}`;
+                        img.className = 'comic-image';
+                        img.dataset.index = index;
+                        img.onerror = () => {
+                            console.error('Failed to load image:', image);
+                            img.alt = '图片加载失败';
+                        };
+                        img.onload = () => {
+                            console.log(`Image ${index + 1} loaded, width: ${img.width}, height: ${img.height}`);
+                            updatePageCounter(); // 图片加载后更新页码
+                        };
+                        container.appendChild(img);
+                    });
+
+                    // 确保页码显示
+                    document.getElementById('page-counter').style.display = 'block';
+                    updatePageCounter();
+                })
+                .catch(err => {
+                    console.error('Load comic error:', err);
+                    alert('加载漫画失败: ' + err.message);
+                })
+                .finally(() => {
+                    document.getElementById('loading').style.display = 'none';
+                });
+
+            window.addEventListener('scroll', handleScroll);
+        }
+
+        function getViewportHeight() {
+            // 兼容不同浏览器
+            const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            console.log('Viewport height:', height);
+            return height;
+        }
+
+        function handleScroll() {
+            const images = document.querySelectorAll('.comic-image');
+            let currentPage = 1;
+
+            if (images.length === 0) {
+                console.log('No images found, skipping page calculation');
+                updatePageCounter(currentPage);
+                return;
+            }
+
+            const viewportHeight = getViewportHeight();
+            let closestTop = Infinity;
+            let loadedImages = 0;
+
+            for (let i = 0; i < images.length; i++) {
+                const img = images[i];
+                const rect = img.getBoundingClientRect();
+                console.log(`Image ${i + 1}: rect.top = ${rect.top}, rect.height = ${rect.height}, naturalHeight = ${img.naturalHeight}`);
+
+                // 检查图片是否加载完成
+                if (rect.height === 0 && img.naturalHeight === 0) {
+                    console.log(`Image ${i + 1} not loaded yet (rect.height = 0, naturalHeight = 0), skipping`);
+                    continue;
+                }
+
+                loadedImages++;
+                const topDistance = Math.abs(rect.top);
+                if (topDistance < closestTop) {
+                    closestTop = topDistance;
+                    currentPage = i + 1;
+                }
+
+                // 改进条件：选择视口内的图片（即使 rect.top 小于 0）
+                if (rect.top >= -rect.height && rect.top <= viewportHeight) {
+                    currentPage = i + 1;
+                    console.log(`Image ${i + 1} is in viewport (rect.top = ${rect.top}, viewportHeight = ${viewportHeight})`);
+                    break;
+                }
+            }
+
+            if (loadedImages === 0) {
+                console.log('No images loaded yet, keeping current page');
+                return;
+            }
+
+            if (currentPage < 1) {
+                currentPage = 1;
+            } else if (currentPage > currentImages.length) {
+                currentPage = currentImages.length;
+            }
+
+            console.log(`Calculated currentPage: ${currentPage}, total pages: ${currentImages.length}`);
+            updatePageCounter(currentPage);
+            saveBookmark(currentPage - 1);
+        }
+
+        function updatePageCounter(currentPage) {
+            if (!currentImages.length) {
+                console.log('No images, setting page counter to 0/0');
+                document.getElementById('page-counter').textContent = '第 0/0 页';
+                return;
+            }
+
+            const viewportHeight = getViewportHeight();
+            if (!currentPage) {
+                const images = document.querySelectorAll('.comic-image');
+                let closestTop = Infinity;
+                for (let i = 0; i < images.length; i++) {
+                    const img = images[i];
+                    const rect = img.getBoundingClientRect();
+                    if (rect.height === 0 && img.naturalHeight === 0) {
+                        console.log(`Image ${i + 1} not loaded yet in updatePageCounter, skipping`);
+                        continue;
+                    }
+                    const topDistance = Math.abs(rect.top);
+                    if (topDistance < closestTop) {
+                        closestTop = topDistance;
+                        currentPage = i + 1;
+                    }
+                    if (rect.top >= -rect.height && rect.top <= viewportHeight) {
+                        currentPage = i + 1;
+                        console.log(`Image ${i + 1} is in viewport in updatePageCounter (rect.top = ${rect.top}, viewportHeight = ${viewportHeight})`);
+                        break;
+                    }
+                }
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > currentImages.length) currentPage = currentImages.length;
+            }
+
+            console.log(`Updating page counter: ${currentPage}/${currentImages.length}`);
+            document.getElementById('page-counter').textContent = `第 ${currentPage}/${currentImages.length} 页`;
+            // 确保可见性
+            document.getElementById('page-counter').style.display = 'block';
+        }
+
+        function saveBookmark(pageIndex) {
+            if (pageIndex >= 0 && pageIndex < currentImages.length) {
+                localStorage.setItem(`bookmark_${currentFilename}`, pageIndex);
+                console.log(`Saved bookmark: page ${pageIndex} for ${currentFilename}`);
+            }
+        }
+    </script>
+</body>
+</html>
