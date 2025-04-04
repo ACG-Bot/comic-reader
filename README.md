@@ -1,5 +1,6 @@
 
-```markdown
+---
+
 # Comic Reader 懒人包 - 小白也能轻松上手的漫画阅读器
 
 欢迎使用 **Comic Reader**！这是一个简单易用的漫画阅读器，支持上传 zip 文件并在线阅读漫画，支持实时页码显示，适合在手机（Termux）、电脑（Windows/Linux/macOS）上使用。
@@ -31,6 +32,37 @@
   - 手机：Android（使用 Termux 应用）。
   - 电脑：Windows、Linux 或 macOS。
 
+#### Termux 用户额外依赖
+在 Termux 中运行项目前，请确保安装以下依赖：
+
+```bash
+pkg install nodejs unzip lsof curl git -y
+termux-setup-storage
+```
+
+- **Node.js 和 npm**：运行 `pkg install nodejs`。
+- **unzip**：运行 `pkg install unzip`（用于测试 zip 文件）。
+- **lsof**（可选）：运行 `pkg install lsof`（用于端口检查）。
+- **curl**（可选）：运行 `pkg install curl`（用于网络调试）。
+- **git**（可选）：运行 `pkg install git`（用于代码管理）。
+- **存储权限**：运行 `termux-setup-storage` 并授予权限。
+
+#### Windows 用户注意事项
+在 Windows 上运行 `deploy.sh` 需要使用 Git Bash 或 WSL（Windows Subsystem for Linux）。请按照以下步骤操作：
+
+1. 安装 Git Bash：从 [git-scm.com](https://git-scm.com/downloads) 下载并安装 Git。
+2. 使用 Git Bash 打开终端。
+3. 运行 `./deploy.sh`。
+
+#### Linux 和 macOS 用户
+确保安装以下工具：
+- **Node.js 和 npm**：建议版本 16 或以上。
+  - Ubuntu/Debian：`sudo apt install nodejs npm`
+  - macOS：`brew install node`
+- **unzip**：用于测试 zip 文件。
+  - Ubuntu/Debian：`sudo apt install unzip`
+  - macOS：通常已预装
+
 ### 2. 下载懒人包
 
 - 下载 `comic-reader-lazy.zip` 文件（由提供者分享）。
@@ -48,23 +80,25 @@
 2. 搜索 `Termux`，下载并安装。
 3. 打开 Termux 应用，进入一个黑色的命令行界面。
 
-#### 2. 安装 Node.js
+#### 2. 安装依赖
 
-1. 在 Termux 中输入以下命令，按回车：
-   ```bash
-   pkg install nodejs
-   ```
-2. 等待安装完成（可能需要几分钟，视网络速度而定）。
-3. 检查 Node.js 是否安装成功：
-   ```bash
-   node -v
-   ```
-   - 如果显示版本号（例如 `v16.20.0`），说明安装成功。
-   - 如果版本低于 16，可以升级 Node.js：
-     ```bash
-     pkg upgrade nodejs
-     ```
-   - 如果提示错误，请检查网络连接，或重新运行安装命令。
+在 Termux 中运行以下命令，安装所有必要依赖：
+
+```bash
+pkg install nodejs unzip lsof curl git -y
+termux-setup-storage
+```
+
+- 检查 Node.js 是否安装成功：
+  ```bash
+  node -v
+  ```
+  - 如果显示版本号（例如 `v16.20.0`），说明安装成功。
+  - 如果版本低于 16，可以升级 Node.js：
+    ```bash
+    pkg upgrade nodejs
+    ```
+  - 如果提示错误，请检查网络连接，或重新运行安装命令。
 
 #### 3. 解压懒人包
 
@@ -77,11 +111,7 @@
    ```bash
    unzip comic-reader-lazy.zip
    ```
-   - 如果提示 `unzip: command not found`，先安装 unzip：
-     ```bash
-     pkg install unzip
-     ```
-     然后重新运行解压命令。
+   - 如果提示 `unzip: command not found`，说明 `unzip` 已安装（上一步已处理）。
 4. 进入解压后的目录：
    ```bash
    cd comic-reader-lazy
@@ -100,7 +130,9 @@
    - 脚本会自动安装依赖（可能需要几分钟，视网络速度而定）。
    - 安装完成后，服务会自动启动，你会看到类似以下输出：
      ```
-     Comic reader running at http://localhost:3000
+     ✅ Comic Reader 部署成功！
+     访问以下地址开始阅读漫画：
+       http://localhost:3000
      ```
 
 #### 5. 访问服务
@@ -141,7 +173,22 @@
 2. 右键点击 `comic-reader-lazy.zip`，选择“解压到 comic-reader-lazy/”或“全部提取”。
 3. 解压完成后，进入解压后的目录（例如 `C:\Users\YourName\Downloads\comic-reader-lazy`）。
 
-#### 3. 安装依赖
+#### 3. 一键部署（推荐）
+
+1. 安装 Git Bash（如果未安装）：
+   - 从 [git-scm.com](https://git-scm.com/downloads) 下载并安装 Git。
+   - 安装完成后，右键解压后的目录，选择“Git Bash Here”打开终端。
+2. 赋予部署脚本执行权限：
+   ```bash
+   chmod +x deploy.sh
+   ```
+3. 运行一键部署脚本：
+   ```bash
+   ./deploy.sh
+   ```
+   - 脚本会自动安装依赖并启动服务。
+
+#### 4. 手动部署（备选）
 
 1. 打开命令提示符（按 `Win + R`，输入 `cmd`，按回车）。
 2. 进入解压后的目录：
@@ -154,10 +201,7 @@
    npm install
    ```
    - 等待安装完成（可能需要几分钟，视网络速度而定）。
-
-#### 4. 启动服务
-
-1. 在命令提示符中输入：
+4. 启动服务：
    ```cmd
    npm start
    ```
@@ -242,11 +286,11 @@
 #### 4. 访问服务
 
 1. 打开浏览器（推荐 Chrome 或 Firefox）。
-2. 在地址栏输入：
+2. In the address bar, enter:
    ```
    http://localhost:3000
    ```
-   按回车，进入漫画阅读器页面。
+   Press Enter to access the comic reader page.
 
 ---
 
@@ -259,6 +303,18 @@
 - `adm-zip`：解压 zip 文件。
 
 依赖会通过 `npm install` 自动安装，具体版本见 `package.json` 文件。
+
+---
+
+## 项目结构
+
+- `README.md`：项目说明文档。
+- `LICENSE`：MIT 许可证文件。
+- `server.js`：服务端主文件，负责启动服务器和处理请求。
+- `public/`：前端静态文件目录，包含 `index.html` 等。
+- `package.json`：项目配置文件，定义依赖和脚本。
+- `deploy.sh`：一键部署脚本（适用于所有平台）。
+- `examples/`（可选）：示例漫画文件，例如 `example-comic.zip`。
 
 ---
 
@@ -310,7 +366,7 @@
      Comic reader running at http://localhost:3000
      ```
      如果没有，重新运行 `npm start` 或 `./deploy.sh`。
-  2. 如果端口被占用，修改 `server.js` 中的端口号（将 `const port = 3000` 改为其他值，例如 `3001`），然后重新启动服务。
+  2. 如果端口被占用，修改 `server.js` 中的端口号（将 `const port = 3000` 改为其他值，例如 `3001`），然后重新启动服务.
 
 ### 2. 上传文件后显示“加载漫画失败”
 
@@ -388,7 +444,7 @@
    ```bash
    npm start
    ```
-4. 访问新的地址，例如 `http://localhost:3001`。
+4. 访问新的地址，例如 `http://localhost:3001`.
 
 ### 2. 在局域网内访问
 
@@ -406,6 +462,11 @@
      ipconfig
      ```
      找到“IPv4 地址”，例如 `192.168.1.100`。
+   - **Linux/macOS**：
+     ```bash
+     ifconfig
+     ```
+     找到 `inet` 地址，例如 `192.168.1.100`。
 3. 在另一台设备的浏览器中输入：
    ```
    http://192.168.1.100:3000
@@ -441,33 +502,9 @@
 
 ---
 
-## 问题反馈
-
-如果遇到问题，请提供以下信息以便排查：
-
-1. **环境信息**：
-   - 操作系统（Termux/Windows/Linux/macOS）。
-   - Node.js 版本（运行 `node -v` 查看）。
-2. **日志信息**：
-   - 终端中的完整日志输出。
-   - 浏览器开发者工具中的控制台日志（按 F12 打开开发者工具，切换到“Console”选项卡）。
-3. **使用的 zip 文件**：
-   - 如果可能，提供你使用的 zip 文件，或者描述文件内容（是否有图片、是否加密）。
-4. **问题描述**：
-   - 详细描述问题（例如“上传后显示加载失败”“页码不更新”）。
-5. **提交反馈**：
-   - 欢迎通过 GitHub Issues 提交问题：
-     [https://github.com/ACG-Bot/comic-reader/issues](https://github.com/ACG-Bot/comic-reader/issues)
-
----
-
 ## 许可证
 
 本项目使用 **MIT 许可证**，详见 [LICENSE](LICENSE) 文件。
 
 ---
 
-## 致谢
-
-感谢使用 Comic Reader！希望你享受阅读漫画的乐趣！如果有任何建议或改进需求，欢迎通过 GitHub Issues 反馈。
-```
