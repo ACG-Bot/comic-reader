@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# deploy.sh - 一键部署脚本 for Comic Reader（全平台��用）
+# deploy.sh - 一键部署脚本 for Comic Reader（全平台通用）
 
 # 打印提示信息
 echo "🚀 开始部署 Comic Reader..."
@@ -29,20 +29,62 @@ case "$OS_TYPE" in
 esac
 echo "检测到平台：$PLATFORM"
 
+# 检查 Termux 存储权限
+if [ "$PLATFORM" = "Termux" ]; then
+    if ! ls /storage/emulated/0/Download &> /dev/null; then
+        echo "⚠️ Termux 未授予存储权限，正在请求..."
+        termux-setup-storage
+        echo "请按照提示授予存储权限，然后重新运行脚本。"
+        exit 1
+    fi
+fi
+
 # 检查 Node.js 是否安装
 if ! command -v node &> /dev/null; then
     echo "⚠️ Node.js 未安装，正在为你安装..."
     case "$PLATFORM" in
         Termux)
+            # 检查 unzip
+            if ! command -v unzip &> /dev/null; then
+                echo "⚠️ unzip 未安装，正在安装..."
+                pkg install unzip -y
+            fi
+
+            # 检查 lsof
+            if ! command -v lsof &> /dev/null; then
+                echo "⚠️ lsof 未安装，正在安装..."
+                pkg install lsof -y
+            fi
+
+            # 检查 curl
+            if ! command -v curl &> /dev/null; then
+                echo "⚠️ curl 未安装，正在安装..."
+                pkg install curl -y
+            fi
+
+            # 检查 git
+            if ! command -v git &> /dev/null; then
+                echo "⚠️ git 未安装，正在安装..."
+                pkg install git -y
+            fi
+
+            # 安装 Node.js
             pkg install nodejs -y
             ;;
         Linux)
-            # 假设是 Ubuntu/Debian，其他发行版可能需要调整
-            sudo apt update
-            sudo apt install -y nodejs npm
+            if command -v apt &> /dev/null; then
+                sudo apt update
+                sudo apt install -y nodejs npm
+            else
+                echo "⚠️ 检测到非 Ubuntu/Debian 系统，无法自动安装 Node.js！"
+                echo "请手动安装 Node.js 和 npm（建议版本 16 或以上）："
+                echo "- CentOS: sudo yum install nodejs npm"
+                echo "- Fedora: sudo dnf install nodejs npm"
+                echo "安装完成后，请重新运行此脚本。"
+                exit 1
+            fi
             ;;
         macOS)
-            # 检查是否安装 Homebrew
             if ! command -v brew &> /dev/null; then
                 echo "⚠️ Homebrew 未安装，正在安装..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -79,7 +121,6 @@ if ! command -v npm &> /dev/null; then
             sudo apt install -y npm
             ;;
         macOS)
-            # Homebrew 安装 Node.js 时会自动安装 npm
             echo "⚠️ npm 应该已随 Node.js 安装，请检查环境。"
             exit 1
             ;;
