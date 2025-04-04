@@ -76,7 +76,7 @@ app.post('/upload', upload.single('comic'), (req, res) => {
     console.log('POST /upload: Response sent (200), time taken:', `${Date.now() - startTime}ms`);
 });
 
-// 强大的自然排序函数（降序）
+// 强大的自然排序函数（升序）
 function naturalSort(a, b) {
     // 提取文件名中的所有数字部分
     const numA = a.match(/\d+/g)?.map(num => parseInt(num, 10)) || [0];
@@ -87,12 +87,12 @@ function naturalSort(a, b) {
         const partA = numA[i] || 0;
         const partB = numB[i] || 0;
         if (partA !== partB) {
-            return partB - partA; // 降序：大的在前
+            return partA - partB; // 升序：小的在前
         }
     }
 
-    // 如果数字部分相同，按字典序排序（降序）
-    return b.localeCompare(a);
+    // 如果数字部分相同，按字典序排序（升序）
+    return a.localeCompare(b);
 }
 
 // 获取漫画内容
@@ -131,8 +131,8 @@ app.get('/comic/:filename', async (req, res) => {
 
         console.log('GET /comic/:filename: Total images found:', images.length);
         console.log('GET /comic/:filename: Images list (before sorting):', images);
-        console.log('GET /comic/:filename: Sorting images (descending)...');
-        images.sort(naturalSort); // 使用自然排序（降序）
+        console.log('GET /comic/:filename: Sorting images (ascending)...');
+        images.sort(naturalSort); // 使用自然排序（升序）
         console.log('GET /comic/:filename: Images list (after sorting):', images);
         console.log('GET /comic/:filename: Sending response with images...');
         res.json(images);
